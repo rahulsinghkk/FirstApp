@@ -5,22 +5,25 @@ import Screen from '../components/Screen';
 import colors from '../config/colors';
 import routes from '../navigation/routes';
 import listingsApi  from "../api/listings";
+import AppText from '../components/AppText';
+import AppButton from '../components/AppButton';
+import ActivityIndicator from '../components/ActivityIndicator';
+import  useApi  from "../hooks/useApi";
 
 function ListingsScreen({navigation}) {
 
-    const [listings , setListings] = useState([])
+    const  {data : listings , error , loading , request : loadListings}= useApi(listingsApi.getListings);
 
     useEffect(()=>{
         loadListings();
-    }, []);
+    },[]);
 
-    const loadListings = async () => {
-        const response = await listingsApi.getListings();
-        setListings(response.data)
-    }
 
     return (
         <Screen style = { styles.screen}>
+            <ActivityIndicator  visible={loading}></ActivityIndicator>
+            {error && <><AppText>We are sorry! Please Retry .</AppText>
+            <AppButton title="Retry" onPress={loadListings}></AppButton></>}
             <FlatList
             data = {listings}
             keyExtractor = {listings => listings.id.toString()}

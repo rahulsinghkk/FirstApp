@@ -1,26 +1,44 @@
-import React, { useState } from 'react';
-import { Button, Image } from 'react-native';
+import React, { useState , useContext } from 'react';
+import { Button, Image , StyleSheet} from 'react-native';
 import Screen from '../components/Screen';
 import * as yup from 'yup'
-import {AppForm , AppFormField , SubmitButton} from '../components/Forms'
+import {AppForm , AppFormField , ErrorMessage, SubmitButton} from '../components/Forms'
+import AuthApi from '../api/auth'
+import jwtDecode from 'jwt-decode'
+import authStorage from '../auth/storage'
+import useAuth from '../auth/useAuth';
 
 const validationSchema = yup.object().shape({
     email : yup.string().email().required().label("Email"),
     password : yup.string().required().min(4).label("Password")
 })
 
+
+
 function LoginScreen(props) {
 
+    const {logIn} = useAuth()
+
+    const [loginFailed , setLoginFailed] = useState(false)
+
+    const handleSubmit = async ({email , password}) => {
+        const response = await AuthApi.login(email,password)
+        if (!response.ok) return setLoginFailed(true)
+        setLoginFailed(false)
+        logIn(response.data)
+    }
     return (
 
+
         <Screen>
-            <Image source={require("../assets/logo.png")}></Image>
+            <Image style={styles.logo} source={require("../assets/logo.png")}></Image>
 
             <AppForm
             initialValues = {{email:'',password : ''}}
-            onSubmit ={(values) => console.log(values)}
+            onSubmit ={handleSubmit}
             validationSchema = {validationSchema}
             >
+                        <ErrorMessage error={"Invalid email or password."} visible={loginFailed}></ErrorMessage>
                         <AppFormField icon="email" 
                         autocorrect = {false}
                         autoCapitalize = "none"
@@ -44,4 +62,13 @@ function LoginScreen(props) {
     );
 }
 
+const styles = StyleSheet.create({
+    logo: {
+        width: 80,
+        height: 80,
+        alignSelf: "center",
+        marginTop: 50,
+        marginBottom: 20
+      }
+});
 export default LoginScreen;

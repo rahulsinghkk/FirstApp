@@ -6,8 +6,9 @@ import AppForImagePicker from '../components/Forms/AppForImagePicker';
 import AppFormPicker from '../components/Forms/AppFormPicker';
 import Screen from '../components/Screen';
 import colors from '../config/colors';
-import * as Location from 'expo-location'
 import useLocation from '../hooks/useLocation';
+import listingsApi  from "../api/listings";
+import UploadScreen from './UploadScreen';
 
 
 const validationSchema = yup.object().shape({
@@ -24,13 +25,27 @@ const Categories = [{label : "Furniture" , value : 1 , backgroundColor : colors.
 
 function ListingEditScreen(props) {
 
-    const Location = useLocation();
+    const location = useLocation();
+    const [uploadVisible , setUploadVisible] = useState(false)
+    const [progress , setProgress] = useState(0)
+
+    const handleSubmit = async(listing , {resetForm}) => {
+        setProgress(0)
+        setUploadVisible(true)
+         const result = await listingsApi.addListings({...listing ,location}, (progress) => setProgress(progress))
+         if(!result.ok) {
+            setUploadVisible(false)
+            return alert('could not save listing');}
+
+        resetForm();
+    }
 
     return (
         <Screen>
+            <UploadScreen onDone={()=> setUploadVisible(false)} progress={progress} visible={uploadVisible}></UploadScreen>
             <AppForm
              initialValues = {{title : "", price : "", description : "",category : null , images : []}}
-             onSubmit = {() => console.log(Location)}
+             onSubmit = {handleSubmit}
              validationSchema = {validationSchema}
             >
               <AppForImagePicker name="images" ></AppForImagePicker>

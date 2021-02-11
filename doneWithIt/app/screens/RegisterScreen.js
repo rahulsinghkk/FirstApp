@@ -1,9 +1,11 @@
 import React from "react";
 import { StyleSheet } from "react-native";
 import * as Yup from "yup";
+import authApi from '../api/auth'
 
 import Screen from "../components/Screen";
 import { AppForm, AppFormField, SubmitButton } from "../components/Forms";
+import useAuth from "../auth/useAuth";
 
 const validationSchema = Yup.object().shape({
   name: Yup.string().required().label("Name"),
@@ -12,11 +14,25 @@ const validationSchema = Yup.object().shape({
 });
 
 function RegisterScreen() {
+  const {logIn} = useAuth()
+
+const handleSubmit = async (userInfo)=>{
+
+      const response = await authApi.register(userInfo);
+      if(!response.ok) {
+        console.log(response.data.error)
+        return
+      } 
+      
+      const {data : authToken} = await authApi.login(userInfo.email , userInfo.password)
+      logIn(authToken)
+}
+
   return (
     <Screen style={styles.container}>
       <AppForm
         initialValues={{ name: "", email: "", password: "" }}
-        onSubmit={(values) => console.log(values)}
+        onSubmit={handleSubmit}
         validationSchema={validationSchema}
       >
         <AppFormField
